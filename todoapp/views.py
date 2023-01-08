@@ -1,11 +1,43 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth.models import User,auth
 from django.contrib import messages
-
 from .models import Task
+from django.views.generic import ListView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView,DeleteView
+from django.urls import reverse_lazy
 # Create your views here.
 
+# class based views
+class TaskListView(ListView):
+	model=Task
+	template_name="home.html"
+	context_object_name='taks'
+    
+class TaskDetailView(DetailView):
+	model=Task
+	template_name="detail.html"
+	context_object_name='i'
 
+class TaskUpdateView(UpdateView):
+	model=Task
+	template_name="update.html"
+	context_object_name='task'
+	fields=('name','priority')
+	def get_success_url(self):
+		return reverse_lazy('TaskDetailView',kwargs={'pk':self.object.id})
+
+class TaskDeleteView(DeleteView):
+	model=Task
+	template_name="delete.html"
+	context_object_name='task'
+	success_url=reverse_lazy("TaskListView")
+
+
+
+
+
+# function based views
 def Index(request):
 	return render(request,"login.html")
 
@@ -63,7 +95,8 @@ def home(request):
 	if request.method=="POST":
 		name=request.POST.get("name")
 		priority=request.POST.get("priority")
-		obj=Task(name=name,priority=priority)
+		date=request.POST.get("date")
+		obj=Task(name=name,priority=priority,date=date)
 		obj.save()
 		return redirect(home)
 	return render(request,"home.html",{'taks':taks})
@@ -78,6 +111,7 @@ def edit(request,taskid):
 	if request.method=="POST":
 		name=request.POST.get("name")
 		priority=request.POST.get("priority")
-		Task.objects.filter(id=taskid).update(name=name,priority=priority)
+		date=request.POST.get("date")
+		Task.objects.filter(id=taskid).update(name=name,priority=priority,date=date)
 		return redirect(home)
 	return render(request,"edit.html",{'tasks':tasks})
